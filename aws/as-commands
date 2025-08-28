@@ -1,0 +1,65 @@
+# Create image of my instance
+
+aws ec2 create-image --instance-id i-0647d43fe629aae53 --name vprofile-las-app-ami --description "AMI for vprofile-las-app" --no-reboot
+
+# ami-0edab8a7350d03efb
+
+# Create the launch template
+aws ec2 create-launch-template \
+    --launch-template-name vprofile-las-app-LT \
+    --version-description "vprofile-las-app launch template" \
+    --launch-template-data '{
+        "ImageId": "ami-0edab8a7350d03efb",
+        "InstanceType": "t4g.micro",
+        "KeyName": "vprofile-prod-key",
+        "SecurityGroupIds": ["sg-0d8f83e3d099608ca"],
+        "IamInstanceProfile": {"Name": "vprofile-ec2-s3-profile"},
+        "TagSpecifications": [
+            {
+                "ResourceType": "instance",
+                "Tags": [{"Key": "Name", "Value": "vprofile-app01"}]
+            },
+            {
+                "ResourceType": "volume",
+                "Tags": [{"Key": "Project", "Value": "vprofile"}]
+            }
+        ]
+    }'
+
+# lt-0b6bbdada8bf6115b
+
+# Create the Auto Scaling group
+aws autoscaling create-auto-scaling-group \
+    --auto-scaling-group-name vprofile-las-app-asg \
+    --launch-template "LaunchTemplateId=lt-0b6bbdada8bf6115b,Version=1" \
+    --min-size 1 \
+    --max-size 4 \
+    --desired-capacity 1 \
+    --vpc-zone-identifier "subnet-09d90d3c4902f8638,subnet-06aca7425edb33fd5,subnet-04e0907e762218f97,subnet-0e1cda3674e8e7eda,subnet-03dbd38d74037f47c" \
+    --target-group-arns arn:aws:elasticloadbalancing:us-east-1:152247411420:targetgroup/vprofile-target-tg/8aad51af1cbfc067 \
+    --health-check-type ELB \
+    --health-check-grace-period 300
+
+# Create target tracking scaling policy on CPU at 50%
+aws autoscaling put-scaling-policy \
+    --auto-scaling-group-name vprofile-las-app-asg \
+    --policy-name vprofile-las-app-asg-cpu50 \
+    --policy-type TargetTrackingScaling \
+    --target-tracking-configuration '{
+        "PredefinedMetricSpecification": {
+            "PredefinedMetricType": "ASGAverageCPUUtilization"
+        },
+        "TargetValue": 50.0,
+        "DisableScaleIn": false
+    }'
+
+# Attach notification to Auto Scaling group via SNS topic
+aws autoscaling put-notification-configuration \
+    --auto-scaling-group-name vprofile-las-app-asg \
+    --topic-arn arn:aws:sns:us-east-1:152247411420:MonitoringTeam \
+    --notification-types "autoscaling:EC2_INSTANCE_LAUNCH" "autoscaling:EC2_INSTANCE_TERMINATE" "autoscaling:EC2_INSTANCE_LAUNCH_ERROR" "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+
+# Enable stickiness of 1 day (86400 seconds) on the target group
+aws elbv2 modify-target-group-attributes \
+    --target-group-arn arn:aws:elasticloadbalancing:us-east-1:152247411420:targetgroup/vprofile-target-tg/8aad51af1cbfc067 \
+    --attributes Key=stickiness.enabled,Value=true Key=stickiness.type,Value=lb_cookie Key=stickiness.lb_cookie.duration_seconds,Value=86400

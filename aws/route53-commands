@@ -1,0 +1,86 @@
+aws route53 create-hosted-zone \
+    --name vprofile.in \
+    --vpc VPCRegion=us-east-1,VPCId=vpc-0117903b1751411ff \
+    --caller-reference "$(date +%s)" \
+    --hosted-zone-config PrivateZone=true
+
+aws route53 change-resource-record-sets \
+    --hosted-zone-id Z022512033PD4JRUCUW99 \
+    --change-batch '{
+        "Changes": [
+        { 
+            "Action": "CREATE",
+            "ResourceRecordSet": {
+            "Name": "db01.vprofile.in",
+            "Type": "A",
+            "TTL": 300,
+            "ResourceRecords": [
+                {
+                "Value": "172.31.23.119"
+                }
+            ]
+            }
+        }
+        ]
+    }'
+
+
+aws route53 change-resource-record-sets \
+    --hosted-zone-id Z022512033PD4JRUCUW99 \
+    --change-batch '{
+        "Changes": [
+        { 
+            "Action": "CREATE",
+            "ResourceRecordSet": {
+            "Name": "mc01.vprofile.in",
+            "Type": "A",
+            "TTL": 300,
+            "ResourceRecords": [
+                {
+                "Value": "172.31.20.244"
+                }
+            ]
+            }
+        }
+        ]
+    }'
+
+aws route53 change-resource-record-sets \
+    --hosted-zone-id Z022512033PD4JRUCUW99 \
+    --change-batch '{
+        "Changes": [
+        { 
+            "Action": "CREATE",
+            "ResourceRecordSet": {
+            "Name": "rmq01.vprofile.in",
+            "Type": "A",
+            "TTL": 300,
+            "ResourceRecords": [
+                {
+                "Value": "172.31.24.214"
+                }
+            ]
+            }
+        }
+        ]
+    }'
+
+aws route53 change-resource-record-sets \
+--hosted-zone-id Z022512033PD4JRUCUW99 \
+--change-batch '{
+    "Changes": [
+    { 
+        "Action": "CREATE",
+        "ResourceRecordSet": {
+        "Name": "app01.vprofile.in",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+            {
+            "Value": "172.31.18.137"
+            }
+        ]
+        }
+    }
+    ]
+}'

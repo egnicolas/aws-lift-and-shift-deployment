@@ -1,0 +1,51 @@
+# Create S3 Bucket
+
+aws s3api create-bucket --bucket vprofile-las-artifacts28082025 --region us-east-1
+
+# Create the user to manage the bucket
+
+aws iam create-user --user-name vprofile-s3-admin
+aws iam attach-user-policy --user-name vprofile-s3-admin --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+aws iam create-access-key --user-name vprofile-s3-admin --query 'AccessKey.{AccessKeyId:AccessKeyId,SecretAccessKey:SecretAccessKey}' --output text > vprofile-s3-admin-access-keys.txt
+
+# Create IAM role
+
+aws iam create-role --role-name vprofile-ec2-s3-role --assume-role-policy-document file://<(echo '{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": { "Service": "ec2.amazonaws.com" },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}') --description "IAM role for EC2 instances with AmazonS3FullAccess"
+
+aws iam attach-role-policy --role-name vprofile-ec2-s3-role --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+# Create an instance profile and add the role to it
+aws iam create-instance-profile --instance-profile-name vprofile-ec2-s3-profile
+aws iam add-role-to-instance-profile --instance-profile-name vprofile-ec2-s3-profile --role-name vprofile-ec2-s3-role
+
+# Attach the instance profile to the EC2 instance vprofile-app01
+
+aws ec2 associate-iam-instance-profile --instance-id i-0647d43fe629aae53 --iam-instance-profile Name=vprofile-ec2-s3-profile
+
+# Copy the WAR file to the S3 bucket
+
+aws s3 cp target/vprofile-v2.war s3://vprofile-las-artifacts28082025/
+
+aws s3 ls s3://vprofile-las-artifacts28082025/
+
+# On the tomcat server
+
+sudo -i
+snap install aws-cli --classic
+aws s3 cp s3://vprofile-las-artifacts28082025/vprofile-v2.war /tmp/
+systemctl stop tomcat10
+systemctl daemon-reload
+systemctl stop tomcat10
+rm -rf /var/lib/tomcat10/webapps/ROOT
+cp /tmp/vprofile-v2.war /var/lib/tomcat10/webapps/ROOT.war
+systemctl start tomcat10

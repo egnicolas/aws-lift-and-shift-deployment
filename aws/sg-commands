@@ -1,0 +1,140 @@
+# vprofile-ELB-SG
+
+aws ec2 create-security-group --group-name vprofile-ELB-SG --description "Security group for the vprofile load balancer"
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-07232830664d2c8f0 \
+    --ip-permissions '[
+        {"IpProtocol":"tcp","FromPort":80,"ToPort":80,"IpRanges":[{"CidrIp":"0.0.0.0/0"}]},
+        {"IpProtocol":"tcp","FromPort":80,"ToPort":80,"Ipv6Ranges":[{"CidrIpv6":"::/0"}]}
+    ]'
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-07232830664d2c8f0 \
+    --ip-permissions '[
+        {"IpProtocol":"tcp","FromPort":443,"ToPort":443,"IpRanges":[{"CidrIp":"0.0.0.0/0"}]},
+        {"IpProtocol":"tcp","FromPort":443,"ToPort":443,"Ipv6Ranges":[{"CidrIpv6":"::/0"}]}
+    ]'
+
+# vprofile-app-sg
+
+aws ec2 create-security-group --group-name vprofile-app-sg --description "Security group for the tomcat server"
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0d8f83e3d099608ca \
+    --ip-permissions '[
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 8080,
+            "ToPort": 8080,
+            "UserIdGroupPairs": [
+                {
+                    "GroupId": "sg-07232830664d2c8f0",
+                    "Description": "allow traffic from vprofile load balancer"
+                }
+            ]
+        }
+    ]'
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0d8f83e3d099608ca \
+    --ip-permissions '[
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "IpRanges": [
+                {
+                    "CidrIp": "192.109.219.210/32",
+                    "Description": "allow SSH from my IP"
+                }
+            ]
+        }
+    ]'
+
+
+# vprofile-backend-sg
+
+aws ec2 create-security-group --group-name vprofile-backend-sg --description "Security group for the mysql, memcached servers and rabbitmq allowed from tomcat server"
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-02320da983eeb421d \
+    --ip-permissions '[
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 3306,
+            "ToPort": 3306,
+            "UserIdGroupPairs": [
+                {
+                    "GroupId": "sg-0d8f83e3d099608ca",
+                    "Description": "allow MySQL traffic from vprofile-app-sg"
+                }
+            ]
+        }
+    ]'
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-02320da983eeb421d \
+    --ip-permissions '[
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 11211,
+            "ToPort": 11211,
+            "UserIdGroupPairs": [
+                {
+                    "GroupId": "sg-0d8f83e3d099608ca",
+                    "Description": "allow Memcached traffic from vprofile-app-sg"
+                }
+            ]
+        }
+    ]'
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-02320da983eeb421d \
+    --ip-permissions '[
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 5672,
+            "ToPort": 5672,
+            "UserIdGroupPairs": [
+                {
+                    "GroupId": "sg-0d8f83e3d099608ca",
+                    "Description": "allow RabbitMQ traffic from vprofile-app-sg"
+                }
+            ]
+        }
+    ]'
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-02320da983eeb421d \
+    --ip-permissions '[
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "IpRanges": [
+                {
+                    "CidrIp": "192.109.219.210/32",
+                    "Description": "allow SSH from my IP"
+                }
+            ]
+        }
+    ]'
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-02320da983eeb421d \
+    --ip-permissions '[
+        {
+            "IpProtocol": "-1",
+            "UserIdGroupPairs": [
+                {
+                    "GroupId": "sg-02320da983eeb421d",
+                    "Description": "allow all traffic from itself"
+                }
+            ]
+        }
+    ]'
+
+# Create Key Pair
+aws ec2 create-key-pair --key-name vprofile-prod-key --query 'KeyMaterial' --output text > vprofile-prod-key.pem
+chmod 400 vprofile-prod-key.pem

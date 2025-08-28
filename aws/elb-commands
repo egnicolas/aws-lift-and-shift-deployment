@@ -1,0 +1,37 @@
+# Create a target group named vprofile-target-tg for instances on port 8080
+aws elbv2 create-target-group \
+    --name vprofile-target-tg \
+    --protocol HTTP \
+    --port 8080 \
+    --vpc-id vpc-0117903b1751411ff \
+    --target-type instance \
+    --health-check-protocol HTTP \
+    --health-check-port 8080 \
+    --health-check-path /
+
+# Register your instance to the target group
+aws elbv2 register-targets \
+    --target-group-arn arn:aws:elasticloadbalancing:us-east-1:152247411420:targetgroup/vprofile-target-tg/8aad51af1cbfc067 \
+    --targets Id=i-0647d43fe629aae53,Port=8080
+
+# Get subnet id 
+
+aws ec2 describe-subnets \
+  --region us-east-1 \
+  --query "Subnets[*].{ID:SubnetId,AZ:AvailabilityZone,AZID:AvailabilityZoneId}" \
+  --output table
+
+# Create an Application Load Balancer named vprofile-las-elb in all us-east-1a to us-east-1f AZs, using security group vprofile-ELB-SG, listening on port 80 and forwarding to vprofile-las-tg
+aws elbv2 create-load-balancer \
+    --name vprofile-las-elb \
+    --subnets subnet-09d90d3c4902f8638 subnet-06aca7425edb33fd5 subnet-04e0907e762218f97 subnet-0e1cda3674e8e7eda subnet-03dbd38d74037f47c subnet-0756533c95a51494d \
+    --security-groups sg-07232830664d2c8f0 \
+    --scheme internet-facing \
+    --type application
+
+# Create a listener on port 80 forwarding to vprofile-las-tg
+aws elbv2 create-listener \
+    --load-balancer-arn arn:aws:elasticloadbalancing:us-east-1:152247411420:loadbalancer/app/vprofile-las-elb/b8f2fa4eb0a126f8 \
+    --protocol HTTP \
+    --port 80 \
+    --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:us-east-1:152247411420:targetgroup/vprofile-target-tg/8aad51af1cbfc067

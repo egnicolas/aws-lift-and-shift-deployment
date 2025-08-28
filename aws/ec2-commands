@@ -1,0 +1,47 @@
+# Backend
+
+# vprofile-db01
+
+aws ec2 run-instances \
+    --image-id ami-0aa7db6294d00216f \
+        --count 1 \
+        --instance-type t4g.micro \
+        --key-name vprofile-prod-key \
+        --security-groups vprofile-backend-sg \
+        --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=vprofile-db01}]' 'ResourceType=volume,Tags=[{Key=Project,Value=vprofile}]' \
+        --user-data file:///Users/negloff/Document/portfolio/aws-lift-and-shift-deployment/userdata/mysql.sh
+
+# vprofile-mc01
+
+aws ec2 run-instances \
+    --image-id ami-0aa7db6294d00216f \
+        --count 1 \
+        --instance-type t4g.micro \
+        --key-name vprofile-prod-key \
+        --security-groups vprofile-backend-sg \
+        --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=vprofile-mc01}]' 'ResourceType=volume,Tags=[{Key=Project,Value=vprofile}]' \
+        --user-data file:///Users/negloff/Document/portfolio/aws-lift-and-shift-deployment/userdata/memcache.sh
+
+# vprofile-rmq01
+
+aws ec2 run-instances \
+    --image-id ami-026fccd88446aa0bf \
+        --count 1 \
+        --instance-type t4g.micro \
+        --key-name vprofile-prod-key \
+        --security-groups vprofile-backend-sg \
+        --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=vprofile-rmq01}]' 'ResourceType=volume,Tags=[{Key=Project,Value=vprofile}]' \
+        --user-data file:///Users/negloff/Document/portfolio/aws-lift-and-shift-deployment/userdata/rabbitmq.sh
+
+# App
+
+# vprofile-app01 (Ubuntu)
+
+aws ec2 run-instances \
+    --image-id ami-026fccd88446aa0bf \
+        --count 1 \
+        --instance-type t4g.micro \
+        --key-name vprofile-prod-key \
+        --security-groups vprofile-app-sg \
+        --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=vprofile-app01}]' 'ResourceType=volume,Tags=[{Key=Project,Value=vprofile}]' \
+        --user-data file:///Users/negloff/Document/portfolio/aws-lift-and-shift-deployment/userdata/tomcat_ubuntu.sh
