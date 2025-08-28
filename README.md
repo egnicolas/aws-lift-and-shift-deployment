@@ -50,7 +50,7 @@ This project demonstrates:
 
 ![AWS Architecture Diagram](./assets/aws-architecture.png)
 
-## 🚀 Architecture Overview
+## 🚀 Deployment Overview
 
 ![AWS Architecture Diagram](./assets/aws-deployment.png)
 
