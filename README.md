@@ -50,6 +50,10 @@ This project demonstrates:
 
 ![AWS Architecture Diagram](./assets/aws-architecture.png)
 
+## 🚀 Architecture Overview
+
+![AWS Architecture Diagram](./assets/aws-deployment.png)
+
 ### Infrastructure Components
 - **Web/Application Layer**: EC2 Instances running Tomcat
 - **Load Balancing Layer**: Application Load Balancer (HTTPS)
@@ -62,22 +66,47 @@ This project demonstrates:
 ## 📁 Project Structure
 
 ```
-aws-lift-and-shift-deployment/
+.
+├── al2023rmq.repo
+├── ansible/
+│   ├── ansible.cfg
+│   ├── site.yml
+│   ├── templates/
+│   │   ├── application.j2
+│   │   ├── epel6-svcfile.j2
+│   │   ├── epel7-svcfile.j2
+│   │   ├── ubuntu14_15-svcfile.j2
+│   │   └── ubuntu16-svcfile.j2
+│   ├── tomcat_setup.yml
+│   └── vpro-app-setup.yml
 ├── assets/
-│   └── aws-architecture.png       # Architecture diagram
-├── scripts/
-│   ├── userdata.sh               # EC2 user data for Tomcat setup
-│   ├── build.sh                  # Maven build & S3 upload
-│   └── deploy.sh                 # Download & deploy WAR to Tomcat
-├── pom.xml                       # Maven project descriptor
-├── Jenkinsfile                   # Optional CI/CD pipeline definition
+│   ├── aws-architecture.png
+│   └── aws-deployment.png
+├── aws/
+│   ├── as-commands
+│   ├── ec2-commands
+│   ├── elb-commands
+│   ├── route53-commands
+│   ├── s3-commands
+│   └── sg-commands
+├── Jenkinsfile
+├── pom.xml
 ├── README.md
-└── src/
-    ├── main/
-    │   ├── java/                 # Java source code
-    │   ├── resources/            # Config files & SQL
-    │   └── webapp/               # Web resources (JSP, static files)
-    └── test/                     # Unit & integration tests
+├── src/
+│   ├── main/
+│   │   ├── java/...
+│   │   ├── resources/...
+│   │   └── webapp/...
+│   └── test/...
+├── target/...
+└── userdata/
+    ├── application.properties
+    ├── backend.sh
+    ├── memcache.sh
+    ├── mysql.sh
+    ├── nginx.sh
+    ├── rabbitmq.sh
+    └── tomcat_ubuntu.sh
 ```
 
 ## 🧠 Why This Project?
